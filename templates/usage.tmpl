@@ -1,0 +1,46 @@
+<html>
+  <head>
+   <title>URL Unshortener</title>
+  </head>
+  <body>
+
+    <h1>URL Unshortener</h1>
+    <p>
+      Unshorten short URLs.
+    </p>
+
+    <h3>GET requests</h3>
+
+    <p>
+      The <code><strong>url</strong></code> parameter refers to the URL to be unshortened.
+    </p>
+    <ul>
+      <li><code>GET</code> <a href="/unshorten?url={{ example_short_url|urlencode }}">/unshorten?url={{ example_short_url }}</a></li>
+    </ul>
+    <form action="/unshorten" method="get">
+      <fieldset>
+        <legend>Demonstration using GET</legend>
+        <p>
+          <label for="url">Enter a URL to be fetched and unshortened:</label>
+          <input type="text" size="80" name="url" value="http://goo.gl/ItuoN" />
+        </p>
+        <p>
+          <input type="submit" value="Submit">
+        </p>
+      </fieldset>
+    </form>
+
+    <h3>JSONP Callbacks</h3>
+    <p>
+      For cross-domain usage directly in web pages, the request can
+      contain the <code><strong>callback</strong></code> parameter,
+      which will wrap the response in a javascript method invocation
+      of the callback's value.
+    </p>
+    <p>
+      For example: <li><code>GET</code> <a href="/unshorten?url={{ example_short_url|urlencode }}&callback=foo">/unshorten?url={{ example_short_url }}&amp;callback=foo</a></li>
+    </p>
+
+    <p>Copyright <a href="http://unto.net">DeWitt Clinton</a> - <a href="http://appengine-unshorten.googlecode.com/">Source</a></p>
+  </body>
+</html>
