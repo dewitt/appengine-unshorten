@@ -9,7 +9,6 @@ sys.path.insert(0, THIRD_PARTY)
 
 import html5lib
 import html5lib.treebuilders
-import httplib2
 import logging
 import re
 import simplejson
@@ -22,8 +21,6 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 
 
 TEMPLATE_DIR = 'templates'
-
-HTTP_CLIENT = httplib2.Http(timeout=10)
 
 EXAMPLE_SHORT_URL = 'http://goo.gl/ItuoN'
 
@@ -112,11 +109,11 @@ class Unshorten(webapp.RequestHandler):
     Args:
       url: The URL to be unshortened
     """
-    response, content = self._get_url(url)
-    title = self._extract_title(content)
+    response = self._get_url(url)
+    title = self._extract_title(response.content)
     return {'url': url,
-            'content-location': response['content-location'],
-            'content-type': response['content-type'],
+            'content-location': response.final_url,
+            'content-type': response.headers['Content-Type'],
             'title': title}
 
   def _extract_title(self, content):
@@ -136,22 +133,28 @@ class Unshorten(webapp.RequestHandler):
         rc.append(node.data)
     return ''.join(rc)
 
-  def _get_url(self, url):
+  def _get_url(self, original_url):
     """Retrieves a URL and caches the results.
 
     Args:
       url: A url to be fetched
     """
+    url = original_url
     if not url.startswith('http') and not url.startswith('https'):
-      url = 'http://%s' % url
+      url = 'http://%s' % original_url
     try:
-      response, content = HTTP_CLIENT.request(url)
+      response = urlfetch.fetch(url, deadline=10, follow_redirects=True, allow_truncated=True)
     except Exception, e:  # This is hackish
       raise ServerError('Could not fetch %s. Host down?' % url)
-    if response.status != 200:
+    if response.status_code != 200:
       raise ServerError(
-        "Could not fetch url '%s': %s." % (url, response.status))
-    return response, content
+        "Could not fetch url '%s': %s." % (url, response.status_code))
+    if not response.content:
+      raise ServerError(
+        "Could not fetch url '%s': %s." % (url, response.status_code))
+    if not response.final_url:
+      response.final_url = url
+    return response
 
   def _sanitize_callback(self, string):
     """Only allow valid json function identifiers through"""
